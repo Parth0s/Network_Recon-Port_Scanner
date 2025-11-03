@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Recon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">📡</div>
+                <h1>Network Recon</h1>
+            </div>
+            <div class="header-right">
+                <div class="status-indicator" id="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Ready</span>
+                </div>
+                <button class="icon-btn" title="Download">⬇</button>
+                <button class="icon-btn" title="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Scan Configuration Panel -->
+            <div class="panel config-panel">
+                <h2>Scan Configuration</h2>
+                <p class="panel-subtitle">Configure network and port scan parameters</p>
+
+                <div class="form-group">
+                    <label>TARGET NETWORK</label>
+                    <input type="text" id="target-network" placeholder="192.168.1.1-254" value="192.168.1.1-254">
+                    <span class="hint">IP range, CIDR notation, or hostname</span>
+                </div>
+
+                <div class="form-group">
+                    <label>PORT RANGE</label>
+                    <input type="text" id="port-range" placeholder="1-1000" value="1-1000">
+                    <div class="quick-options">
+                        <button class="option-btn" onclick="setPortRange('1-100')">Common</button>
+                        <button class="option-btn" onclick="setPortRange('1-65535')">All</button>
+                        <button class="option-btn active" onclick="setPortRange('1-1000')">Top 1000</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>SCAN TYPE</label>
+                    <div class="scan-types">
+                        <button class="scan-type-btn active" data-type="quick">
+                            <span class="icon">⚡</span>
+                            <span>Quick Scan</span>
+                        </button>
+                        <button class="scan-type-btn" data-type="deep">
+                            <span class="icon">🔍</span>
+                            <span>Deep Scan</span>
+                        </button>
+                        <button class="scan-type-btn" data-type="service">
+                            <span class="icon">🔧</span>
+                            <span>Service Detection</span>
+                        </button>
+                        <button class="scan-type-btn" data-type="os">
+                            <span class="icon">💻</span>
+                            <span>OS Detection</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button class="accordion-btn" onclick="toggleAdvanced()">
+                        <span>Advanced Options</span>
+                        <span class="arrow">▼</span>
+                    </button>
+                    <div class="advanced-options" id="advanced-options">
+                        <label><input type="checkbox" checked> Aggressive Scan (-A)</label>
+                        <label><input type="checkbox"> Skip Ping (-Pn)</label>
+                        <label><input type="checkbox" checked> Version Detection</label>
+                    </div>
+                </div>
+
+                <button class="start-scan-btn" id="start-scan-btn" onclick="startScan()">
+                    <span class="btn-icon">▶</span>
+                    <span>Start Scan</span>
+                </button>
+            </div>
+
+            <!-- Scan Progress Panel -->
+            <div class="panel progress-panel">
+                <h2>Scan Progress</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Hosts Scanned</div>
+                        <div class="stat-value" id="hosts-scanned">0</div>
+                    </div>
+                    <div class="stat-card active">
+                        <div class="stat-label">Active Hosts</div>
+                        <div class="stat-value" id="active-hosts">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Ports Checked</div>
+                        <div class="stat-value" id="ports-checked">0</div>
+                    </div>
+                </div>
+
+                <div class="message-box" id="message-box">
+                    Configure scan parameters and click Start Scan
+                </div>
+
+                <!-- Results Table -->
+                <div class="results-section" id="results-section">
+                    <div class="results-header">
+                        <h3>💻 Discovered Hosts (<span id="hosts-count">0</span>)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <th>Hostname</th>
+                                    <th>Status</th>
+                                    <th>Open Ports</th>
+                                    <th>OS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-tbody">
+                                <tr class="no-data">
+                                    <td colspan="5">No hosts discovered yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Report Panel -->
+            <div class="panel export-panel">
+                <h2>Export Report</h2>
+                <p class="panel-subtitle">Generate security report from scan results</p>
+
+                <div class="form-group">
+                    <label>FORMAT</label>
+                    <div class="format-options">
+                        <label class="format-option selected">
+                            <input type="radio" name="format" value="pdf" checked>
+                            <span class="icon">📄</span>
+                            <span>PDF</span>
+                        </label>
+                        <label class="format-option">
+                            <input type="radio" name="format" value="json">
+                            <span class="icon">📋</span>
+                            <span>JSON</span>
+                        </label>
+                        <label class="format-option">
+                            <input type="radio" name="format" value="csv">
+                            <span class="icon">📊</span>
+                            <span>CSV</span>
+                        </label>
+                        <label class="format-option">
+                            <input type="radio" name="format" value="xml">
+                            <span class="icon">📝</span>
+                            <span>XML</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>SCOPE</label>
+                    <div class="scope-options">
+                        <label class="scope-option selected">
+                            <input type="radio" name="scope" value="all" checked>
+                            <span>All Discovered Hosts</span>
+                        </label>
+                        <label class="scope-option">
+                            <input type="radio" name="scope" value="selected">
+                            <span>Selected Items</span>
+                        </label>
+                        <label class="scope-option">
+                            <input type="radio" name="scope" value="current">
+                            <span>Current Host</span>
+                            <span class="count">(1)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>INCLUDE SECTIONS</label>
+                    <div class="checkbox-list">
+                        <label><input type="checkbox" checked> Executive Summary</label>
+                        <label><input type="checkbox" checked> Detailed Port Analysis</label>
+                        <label><input type="checkbox"> Raw Scan Data</label>
+                        <label><input type="checkbox" checked> Security Recommendations</label>
+                    </div>
+                </div>
+
+                <button class="generate-report-btn" onclick="generateReport()">
+                    <span class="btn-icon">⬇</span>
+                    <span>Generate Report</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
